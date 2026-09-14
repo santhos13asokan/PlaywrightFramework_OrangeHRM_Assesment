@@ -19,6 +19,7 @@ export class PimPage extends BasePage {
   readonly middleNameInput: Locator;
   readonly lastNameInput: Locator;
   readonly savePersonalDetailsBtn: Locator;
+ 
   
 
   constructor(uiUtil: UIUtil, waitsUtil: WaitsUtil) {
@@ -39,6 +40,7 @@ export class PimPage extends BasePage {
     this.middleNameInput = this.page.locator('input[name="middleName"]');
     this.lastNameInput = this.page.locator('input[name="lastName"]');
   this.savePersonalDetailsBtn = this.page.getByRole('button', { name: 'Save' }).first();
+  this.confirmDeleteButton = this.page.getByRole('button', { name: 'Yes, Delete' });
   }
 
   async navigateToPimMenu() {
@@ -73,16 +75,19 @@ export class PimPage extends BasePage {
     await this.waitForPageLoad();
   }
 
-  async clickDeleteEmployee(identifier: string, confirmDelete: boolean = true): Promise<void> {
-    const deleteBtn = this.page.locator('.oxd-table-card', { hasText: identifier }).locator('button:has(.bi-trash)');
+async clickDeleteEmployee(identifier: string, confirmDelete: boolean = true): Promise<void> {
+    const deleteBtn = this.page
+      .locator('.oxd-table-card', { hasText: identifier })
+      .locator('button:has(.bi-trash)');
+      
     await this.clickElement(deleteBtn);
 
     if (confirmDelete) {
       await this.clickElement(this.confirmDeleteButton);
       await this.waitForPageLoad();
     }
-
   }
+
   async editEmployeeFullName(firstName: string, middleName: string, lastName: string): Promise<void> {
     await this.fillText(this.firstNameInput, firstName);
     await this.fillText(this.middleNameInput, middleName);

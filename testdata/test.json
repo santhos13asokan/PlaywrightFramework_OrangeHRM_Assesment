@@ -2,5 +2,6 @@
     "admin":{
 "userName":"Admin",
 "password":"admin123"
-    }
+    },
+    "Api_url":"https://opensource-demo.orangehrmlive.com"
 }

@@ -1,4 +1,4 @@
-import { test } from '../fixtures/custom.fixture';
+import { test ,expect} from '../fixtures/custom.fixture';
 import * as testData from '../testdata/test.json';
 import * as path from 'path';
 import { loginPageConst, pimPageConst, adminConst, addEmployeeConst } from '../constants/data.constant';
@@ -74,7 +74,7 @@ await pimPage.verifyTableDetails(fullName, addEmployeeConst.lastName);
 
   });
 
-  test('Edit employeename', async ({ poManager, uiUtil,waitsUtil }) => {
+  test('Edit employeename', async ({ poManager, uiUtil,waitsUtil,apiUtil }) => {
     const loginPage = poManager.getLoginPage();
     const pimPage = poManager.getPimPage();
 
@@ -101,14 +101,25 @@ await pimPage.verifyTableDetails(fullName, addEmployeeConst.lastName);
     
     await uiUtil.assertTextVisible(addEmployeeConst.successfullyUpdated);
 
+    const updatedFullName = addEmployeeConst.updatedFirstName + ' ' + addEmployeeConst.updatedMiddleName;
+    // const apiData = await apiUtil.getEmployeeById(addEmployeeConst.employeeId);
+
+    // expect(apiData, `API should return a valid employee record for ID "${addEmployeeConst.employeeId}"`).not.toBeNull();
+    // expect(apiData.firstName).toBe(addEmployeeConst.updatedFirstName);
+    // expect(apiData.middleName || '').toBe(addEmployeeConst.updatedMiddleName);
+    // expect(apiData.lastName).toBe(addEmployeeConst.updatedLastName);
+
+
     await pimPage.navigateToPimMenu();
     await uiUtil.assertVisible(loginPage.page.getByRole('heading', { name: pimPageConst.headers }));
-
-    const updatedFullName = addEmployeeConst.updatedFirstName + ' ' + addEmployeeConst.updatedMiddleName;
 
     await pimPage.searchEmployeeByName(updatedFullName);
     await pimPage.page.waitForSelector('.oxd-table-card', { state: 'visible' });
     await pimPage.verifyTableDetails(updatedFullName, addEmployeeConst.updatedLastName);
+
+      await waitsUtil.forLoadState("networkidle");
+
+    await pimPage.clickDeleteEmployee(updatedFullName, true);
 
 
 
