@@ -21,10 +21,7 @@ export class DashboardPage extends BasePage {
     
   }
 
-  /**
-   * Reusable method to click any sidebar menu item by name
-   * @param menuName Name of the menu item (e.g., 'PIM', 'Admin', 'Leave', 'Time')
-   */
+  
   async clickSideMenuItem(menuName: string): Promise<void> {
     const itemLocator = this.page.getByRole('link', { name: menuName, exact: true });
     await this.uiUtil.click(itemLocator);

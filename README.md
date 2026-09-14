@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # OrangeHRM Playwright Test Suite
 
 This repository contains the automated E2E test suite for the OrangeHRM web application. It is built using Playwright with TypeScript and follows the Page Object Model (POM) design pattern to keep tests clean, maintainable, and easy to extend.
@@ -42,3 +43,6 @@ git clone <your-repository-url>
 cd <project-folder>
 npm install
 
+=======
+# PlaywrightFramework_OrangeHRM_Assesment
+>>>>>>> 9e7e810669e3ae6fa269349a23f20f08338d07e9
