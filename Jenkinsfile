@@ -24,7 +24,7 @@ pipeline {
 
         stage('Install dependencies') {
             steps {
-                dir('Automationframework') {
+                dir('OrangeHrm') {
                     bat 'npm ci'
                 }
             }
@@ -32,7 +32,7 @@ pipeline {
 
         stage('Install Playwright browsers') {
             steps {
-                dir('Automationframework') {
+                dir('OrangeHrm') {
                     bat 'npx playwright install'
                 }
             }
@@ -50,7 +50,7 @@ pipeline {
     post {
         always {
             
-            dir('Automationframework') {
+            dir('OrangeHrm') {
                 catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
                     bat 'npm run allure:generate'
                 }
@@ -61,7 +61,7 @@ pipeline {
                 allowMissing: true,
                 alwaysLinkToLastBuild: true,
                 keepAll: true,
-                reportDir: 'Automationframework/playwright-report',
+                reportDir: 'OrangeHrm/playwright-report',
                 reportFiles: 'index.html',
                 reportName: 'Playwright Test Report'
             ])
@@ -71,12 +71,12 @@ pipeline {
                 allowMissing: true,
                 alwaysLinkToLastBuild: true,
                 keepAll: true,
-                reportDir: 'Automationframework/allure-report',
+                reportDir: 'OrangeHrm/allure-report',
                 reportFiles: 'index.html',
                 reportName: 'Allure Test Report'
             ])
 
-            archiveArtifacts artifacts: 'Automationframework/test-results/**/*, Automationframework/allure-results/**/*, Automationframework/allure-report/**/*', allowEmptyArchive: true
+            archiveArtifacts artifacts: 'OrangeHrm/test-results/**/*, OrangeHrm/allure-results/**/*, OrangeHrm/allure-report/**/*', allowEmptyArchive: true
         }
         success {
             echo 'Playwright Test Suite passed!'
