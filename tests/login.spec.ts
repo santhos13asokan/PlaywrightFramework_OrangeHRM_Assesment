@@ -1,6 +1,7 @@
 import { test ,expect} from '../fixtures/custom.fixture';
-import * as testData from '../testdata/test.json';
+
 import * as path from 'path';
+import { testData } from '../testdata';
 import { loginPageConst, pimPageConst, adminConst, addEmployeeConst } from '../constants/data.constant';
 
 
@@ -10,8 +11,14 @@ test.describe('Login and PIM Tests', () => {
 
   test.beforeEach(async ({ poManager, uiUtil }) => {
     const loginPage = poManager.getLoginPage();
+    await loginPage.page.context().clearCookies();
     await loginPage.gotoLoginPage();
     await uiUtil.assertTitle(loginPageConst.title);
+  });
+
+  test.afterEach(async ({ poManager }) => {
+    const loginPage = poManager.getLoginPage();
+    await loginPage.logout();
   });
 
   test('Login with admin', async ({ poManager, uiUtil, waitsUtil }) => {
@@ -95,21 +102,13 @@ await pimPage.verifyTableDetails(fullName, addEmployeeConst.lastName);
 
     await waitsUtil.forLoadState("networkidle");
     
-
     await pimPage.editEmployeeFullName(addEmployeeConst.updatedFirstName, addEmployeeConst.updatedMiddleName, addEmployeeConst.updatedLastName);
 
     
     await uiUtil.assertTextVisible(addEmployeeConst.successfullyUpdated);
 
     const updatedFullName = addEmployeeConst.updatedFirstName + ' ' + addEmployeeConst.updatedMiddleName;
-    // const apiData = await apiUtil.getEmployeeById(addEmployeeConst.employeeId);
-
-    // expect(apiData, `API should return a valid employee record for ID "${addEmployeeConst.employeeId}"`).not.toBeNull();
-    // expect(apiData.firstName).toBe(addEmployeeConst.updatedFirstName);
-    // expect(apiData.middleName || '').toBe(addEmployeeConst.updatedMiddleName);
-    // expect(apiData.lastName).toBe(addEmployeeConst.updatedLastName);
-
-
+    
     await pimPage.navigateToPimMenu();
     await uiUtil.assertVisible(loginPage.page.getByRole('heading', { name: pimPageConst.headers }));
 

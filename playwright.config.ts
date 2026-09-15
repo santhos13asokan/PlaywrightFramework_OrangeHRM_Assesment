@@ -1,4 +1,54 @@
 import { defineConfig, devices } from '@playwright/test';
+import { Config } from './config/env.config';
+
+
+const browserName = (process.env.BROWSER || 'chromium').toLowerCase();
+
+function getProjects() {
+  if (browserName === 'firefox') {
+    return [
+      {
+        name: 'firefox',
+        use: { ...devices['Desktop Firefox'] },
+      },
+    ];
+  }
+
+  if (browserName === 'webkit') {
+    return [
+      {
+        name: 'webkit',
+        use: { ...devices['Desktop Safari'] },
+      },
+    ];
+  }
+
+  if (browserName === 'all') {
+    return [
+      {
+        name: 'chromium',
+        use: { ...devices['Desktop Chrome'] },
+      },
+      {
+        name: 'firefox',
+        use: { ...devices['Desktop Firefox'] },
+      },
+      {
+        name: 'webkit',
+        use: { ...devices['Desktop Safari'] },
+      },
+    ];
+  }
+
+
+  return [
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+    },
+  ];
+}
+
 
 
 export default defineConfig({
@@ -16,13 +66,23 @@ export default defineConfig({
  
   workers: process.env.CI ? 1 : 1,
   
-  reporter: 'html',
+   reporter: [
+    ['html'],
+    ['allure-playwright', { outputFolder: 'allure-results' }],
+  ],
+
    use: {
-     baseURL:'https://opensource-demo.orangehrmlive.com/',
-     trace: 'on-first-retry',
-     screenshot: 'only-on-failure',
+
+    baseURL: Config.baseUrl,
+    extraHTTPHeaders: {
+      'Accept': 'application/json',
+    },
+    testIdAttribute: 'data-test',
+    trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    headless: false
+    headless: true
+    
   },
 
   

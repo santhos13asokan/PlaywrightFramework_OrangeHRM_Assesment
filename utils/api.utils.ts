@@ -1,62 +1,105 @@
 import type { APIRequestContext, APIResponse } from '@playwright/test';
-import * as testData from '../testdata/test.json';
+import { Config } from '../config/env.config';
+import { testData } from '../testdata';
 
-export interface EmployeePayload {
-  empId: string;
-  firstName: string;
-  middleName?: string;
-  lastName: string;
-}
 
 export class APIUtil {
-  private baseUrl: string;
+  private sessionCookie = '';
 
-  constructor(private request: APIRequestContext) {
-    this.baseUrl = testData.Api_url;
+  constructor(private request: APIRequestContext) {}
+
+  async login(): Promise<void> {
+    const baseUrl = Config.baseUrl;
+
+    
+    const loginPage = await this.request.get(`${baseUrl}/index.php/auth/login`);
+    const htmlText = await loginPage.text();
+    const initialCookie = loginPage.headers()['set-cookie'] || '';
+
+  
+    const tokenPart = htmlText.split(':token="&quot;')[1] || htmlText.split(':token="')[1];
+    
+    if (!tokenPart) {
+      throw new Error('Could not find CSRF token on login page');
+    }
+    
+    const csrfToken = tokenPart.split('&quot;')[0].split('"')[0];
+
+   
+    const loginResponse = await this.request.post(`${baseUrl}/index.php/auth/validate`, {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': initialCookie,
+      },
+      form: {
+        _token: csrfToken,
+        username: testData.admin.userName,
+        password: testData.admin.password,
+      },
+      maxRedirects: 0,
+    });
+
+    
+    const validateCookie = loginResponse.headers()['set-cookie'] || '';
+    this.sessionCookie = validateCookie ? `${initialCookie}; ${validateCookie}` : initialCookie;
   }
 
-  async get(endpoint: string, options?: { params?: Record<string, string | number | boolean>; headers?: Record<string, string> }): Promise<APIResponse> {
-    return await this.request.get(`${this.baseUrl}${endpoint}`, {
+
+
+  private async sendRequest(
+    method: 'GET' | 'POST' | 'PUT' | 'DELETE',
+    endpoint: string,
+    options?: { data?: object; params?: Record<string, string | number> }
+  ): Promise<APIResponse> {
+    const url = `${Config.apiUrl}${endpoint}`;
+
+    return await this.request.fetch(url, {
+      method,
+      data: options?.data,
       params: options?.params,
-      headers: options?.headers,
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': this.sessionCookie,
+      },
     });
   }
 
-  async post(endpoint: string, payload: object, options?: { headers?: Record<string, string> }): Promise<APIResponse> {
-    return await this.request.post(`${this.baseUrl}${endpoint}`, {
-      data: payload,
-      headers: options?.headers,
-    });
+
+  async get(endpoint: string, params?: Record<string, string | number>): Promise<APIResponse> {
+    return await this.sendRequest('GET', endpoint, { params });
   }
 
-  async put(endpoint: string, payload: object, options?: { headers?: Record<string, string> }): Promise<APIResponse> {
-    return await this.request.put(`${this.baseUrl}${endpoint}`, {
-      data: payload,
-      headers: options?.headers,
-    });
+  async post(endpoint: string, data: object): Promise<APIResponse> {
+    return await this.sendRequest('POST', endpoint, { data });
   }
 
-  async delete(endpoint: string, payload?: object): Promise<APIResponse> {
-    return await this.request.delete(`${this.baseUrl}${endpoint}`, {
-      data: payload,
-    });
+  async put(endpoint: string, data: object): Promise<APIResponse> {
+    return await this.sendRequest('PUT', endpoint, { data });
   }
 
- async getEmployeeById(empId: string) {
-  const response = await this.get('/web/index.php/api/v2/pim/employees', {
-    params: { model: 'detailed', empId: empId },
-  });
+  async delete(endpoint: string, data?: object): Promise<APIResponse> {
+    return await this.sendRequest('DELETE', endpoint, { data });
+  }
 
-  const body = await response.json();
-  return body.data?.[0] || null;
-}
-
-  async createEmployee(employee: EmployeePayload) {
-    return await this.post('/web/index.php/api/v2/pim/employees', {
+  
+  async createEmployee(employee: { empId: string; firstName: string; middleName?: string; lastName: string }): Promise<APIResponse> {
+    return await this.post('/pim/employees', {
       empId: employee.empId,
       firstName: employee.firstName,
       middleName: employee.middleName || '',
       lastName: employee.lastName,
     });
+  }
+
+  
+  async getEmployeeById(empId: string) {
+    const response = await this.get('/pim/employees', { model: 'detailed', empId });
+
+    if (!response.ok()) {
+      return null;
+    }
+
+    const result = await response.json();
+    return result.data?.[0] || null;
   }
 }
